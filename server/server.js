@@ -7,7 +7,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     methods: ['GET', 'POST']
   }
 });
@@ -63,7 +63,7 @@ io.on('connection', (socket) => {
     if (!playerName || playerName.trim() === '') {
       return callback?.({ success: false, error: 'Player name is required' });
     }
-    
+
     if (room.players.has(socket.id)) {
       return callback?.({ success: false, error: 'Already in room' });
     }
@@ -76,7 +76,7 @@ io.on('connection', (socket) => {
       players: playersArray,
       count: playersArray.length
     });
-    
+
     console.log(`Player ${playerName} joined room ${roomCode}`);
     if (callback) callback({ success: true, players: playersArray, roomCode });
   });
@@ -91,7 +91,7 @@ io.on('connection', (socket) => {
     room.started = true;
     const playerSocketIds = Array.from(room.players.keys());
     const shuffledIds = shuffle(playerSocketIds);
-    
+
     for (let i = 0; i < shuffledIds.length; i++) {
       const pId = shuffledIds[i];
       const role = i < room.mafiaCount ? 'MAFIA' : 'CIVILIAN';
@@ -100,14 +100,14 @@ io.on('connection', (socket) => {
     }
 
     io.to(roomCode).emit('game-started');
-    
+
     console.log(`Game started in room ${roomCode}`);
     if (callback) callback({ success: true });
   });
 
   socket.on('disconnect', () => {
     console.log(`Socket disconnected: ${socket.id}`);
-    
+
     for (const [roomCode, room] of rooms.entries()) {
       if (room.hostSocketId === socket.id) {
         io.to(roomCode).emit('room-closed', { reason: 'Host disconnected' });
@@ -126,7 +126,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
