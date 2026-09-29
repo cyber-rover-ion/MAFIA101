@@ -4,7 +4,8 @@ let socket = null;
 
 export function getSocket() {
   if (!socket) {
-    socket = io('/', { transports: ['websocket', 'polling'] });
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || '/';
+    socket = io(socketUrl, { transports: ['websocket', 'polling'] });
   }
   return socket;
 }
