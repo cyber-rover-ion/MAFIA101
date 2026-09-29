@@ -26,7 +26,7 @@ function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [a[j], a[i]] = [a[i], a[j]];
   }
   return a;
 }
@@ -40,6 +40,7 @@ io.on('connection', (socket) => {
       code: roomCode,
       hostSocketId: socket.id,
       mafiaCount: mafiaCount || 1,
+      doctorCount: 1,
       players: new Map(),
       started: false,
       roles: new Map()
@@ -85,18 +86,38 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomCode);
     if (!room) return callback?.({ success: false, error: 'Room not found' });
     if (room.hostSocketId !== socket.id) return callback?.({ success: false, error: 'Only host can start game' });
+
+    const requiredPlayers = room.mafiaCount + room.doctorCount;
     if (room.players.size < 3) return callback?.({ success: false, error: 'Need at least 3 players' });
-    if (room.players.size <= room.mafiaCount) return callback?.({ success: false, error: 'More players than mafia needed' });
+    if (room.players.size <= requiredPlayers) {
+      return callback?.({ success: false, error: 'Need more players than the configured special roles' });
+    }
 
     room.started = true;
     const playerSocketIds = Array.from(room.players.keys());
     const shuffledIds = shuffle(playerSocketIds);
 
-    for (let i = 0; i < shuffledIds.length; i++) {
-      const pId = shuffledIds[i];
-      const role = i < room.mafiaCount ? 'MAFIA' : 'CIVILIAN';
-      room.roles.set(pId, role);
-      io.to(pId).emit('role-reveal', { role });
+    let index = 0;
+
+    // Exact Mafia count.
+    for (let i = 0; i < room.mafiaCount; i++) {
+      const pId = shuffledIds[index++];
+      room.roles.set(pId, 'MAFIA');
+      io.to(pId).emit('role-reveal', { role: 'MAFIA' });
+    }
+
+    // Exactly one Doctor, selected from players not already assigned Mafia.
+    for (let i = 0; i < room.doctorCount; i++) {
+      const pId = shuffledIds[index++];
+      room.roles.set(pId, 'DOCTOR');
+      io.to(pId).emit('role-reveal', { role: 'DOCTOR' });
+    }
+
+    // Everyone else is Civilian.
+    for (; index < shuffledIds.length; index++) {
+      const pId = shuffledIds[index];
+      room.roles.set(pId, 'CIVILIAN');
+      io.to(pId).emit('role-reveal', { role: 'CIVILIAN' });
     }
 
     io.to(roomCode).emit('game-started');
