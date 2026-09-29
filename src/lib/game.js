@@ -6,15 +6,12 @@ const SOCKET_TIMEOUT = 90000;
 const PRODUCTION_SOCKET_URL = 'https://mafia101-server.onrender.com';
 
 function getSocketUrl() {
-  const configuredUrl = import.meta.env.VITE_SOCKET_URL?.trim();
-
-  if (configuredUrl) return configuredUrl;
-
   if (import.meta.env.PROD) {
     return PRODUCTION_SOCKET_URL;
   }
 
-  return '/';
+  const configuredUrl = import.meta.env.VITE_SOCKET_URL?.trim();
+  return configuredUrl || '/';
 }
 
 export function getSocket() {
