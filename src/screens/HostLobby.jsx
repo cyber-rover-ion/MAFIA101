@@ -40,7 +40,7 @@ export default function HostLobby({ roomCode, mafiaCount, onGameStarted }) {
     }
   };
 
-  const minPlayers = Math.max(3, mafiaCount + 1);
+  const minPlayers = Math.max(3, mafiaCount + 2);
   const canStart = players.length >= minPlayers;
 
   return (
