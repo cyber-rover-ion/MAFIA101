@@ -2,7 +2,8 @@ import { io } from 'socket.io-client';
 
 let socket = null;
 
-const SOCKET_TIMEOUT = 8000;
+const SOCKET_TIMEOUT = 90000;
+const PRODUCTION_SOCKET_URL = 'https://mafia101-server.onrender.com';
 
 function getSocketUrl() {
   const configuredUrl = import.meta.env.VITE_SOCKET_URL?.trim();
@@ -10,7 +11,7 @@ function getSocketUrl() {
   if (configuredUrl) return configuredUrl;
 
   if (import.meta.env.PROD) {
-    throw new Error('Game server URL is not configured');
+    return PRODUCTION_SOCKET_URL;
   }
 
   return '/';
