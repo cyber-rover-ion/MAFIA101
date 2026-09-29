@@ -4,10 +4,29 @@ import { Server } from 'socket.io';
 
 const app = express();
 
+app.get('/health', (_req, res) => {
+  res.json({ ok: true, service: 'mafia101' });
+});
+
 const httpServer = createServer(app);
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'https://mafia101.vercel.app',
+  'https://mafia101-awmdev.vercel.app',
+  'https://mafia101-git-main-awmdev.vercel.app',
+  'http://localhost:5173'
+].filter(Boolean);
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Origin not allowed by CORS'));
+    },
     methods: ['GET', 'POST']
   }
 });
@@ -99,21 +118,18 @@ io.on('connection', (socket) => {
 
     let index = 0;
 
-    // Exact Mafia count.
     for (let i = 0; i < room.mafiaCount; i++) {
       const pId = shuffledIds[index++];
       room.roles.set(pId, 'MAFIA');
       io.to(pId).emit('role-reveal', { role: 'MAFIA' });
     }
 
-    // Exactly one Doctor, selected from players not already assigned Mafia.
     for (let i = 0; i < room.doctorCount; i++) {
       const pId = shuffledIds[index++];
       room.roles.set(pId, 'DOCTOR');
       io.to(pId).emit('role-reveal', { role: 'DOCTOR' });
     }
 
-    // Everyone else is Civilian.
     for (; index < shuffledIds.length; index++) {
       const pId = shuffledIds[index];
       room.roles.set(pId, 'CIVILIAN');
