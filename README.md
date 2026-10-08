@@ -1,60 +1,62 @@
 # MAFIA101
 
-A fast-paced multiplayer social-deduction game inspired by the hidden-role gameplay of games such as Among Us.
+A browser-based multiplayer social-deduction game built around room-based play, hidden roles, and real-time communication.
 
-##  Overview
+## Overview
 
-MAFIA101 is a browser-based multiplayer game where players join a room, receive hidden roles, and work through social deduction to identify the Mafia.
+MAFIA101 is a multiplayer game where players join a room, receive hidden roles, and use discussion and deduction to identify the Mafia. The project combines a simple lobby flow with real-time multiplayer state and a neon-styled browser interface.
 
-The project focuses on real-time multiplayer interaction, simple room joining, and a neon-styled game experience.
-
-##  Core Gameplay
+## Core Gameplay
 
 - Create a game room
 - Join using a room code
-- Host-controlled game setup
-- Configurable Mafia count
-- Hidden-role gameplay
-- Mafia and civilian-side roles
-- Doctor role
-- Real-time multiplayer communication
+- Enter a player name
+- Configure the Mafia count through the host
+- Assign hidden roles
+- Support Mafia and civilian-side gameplay
+- Include a Doctor role
+- Synchronize multiplayer activity in real time
 
-The host controls room setup but does not participate as a normal player in the game.
+The host is responsible for room setup and does not participate as a normal player.
 
-##  Multiplayer Architecture
+## Multiplayer Architecture
 
-The production project uses:
+The production setup uses a separated frontend and backend:
 
-- A web frontend
-- A multiplayer backend
+- Browser frontend
+- Multiplayer backend
 - Socket.IO for real-time communication
-- Vercel for the frontend deployment
-- Render for the backend deployment
+- Vercel for frontend deployment
+- Render for backend deployment
 
-##  Playing
+This separation allows the browser client and multiplayer server to evolve independently while Socket.IO handles the real-time communication layer.
 
-Open the deployed game, enter a player name, then create or join a room using the available room controls.
+## Playing
 
-For local development, use the scripts and configuration already provided in the repository.
+Open the deployed game, enter a player name, and create or join a room using the available room controls.
 
-##  Project Focus
+For local development, use the scripts and configuration included in the repository.
 
-MAFIA101 is primarily an experiment in:
+## Project Focus
+
+MAFIA101 is also a practical experiment in:
 
 - Real-time web applications
 - Multiplayer state synchronization
-- Room-based game architecture
-- Browser UI/UX
+- Room-based server architecture
+- Browser game UI/UX
 - Social-deduction mechanics
+- Handling connected player state
 
-##  Future Ideas
+## Future Ideas
 
 - Additional roles
 - More game modes
-- Improved lobby customization
-- Better reconnect handling
+- Expanded lobby customization
+- Improved reconnect handling
 - Spectator support
 - More polished mobile gameplay
+- Additional game-state feedback
 
 ## Creator
 
