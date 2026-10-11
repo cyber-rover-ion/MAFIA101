@@ -1,6 +1,7 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { randomInt } from 'node:crypto';
 
 const app = express();
 
@@ -34,9 +35,11 @@ const io = new Server(httpServer, {
 const rooms = new Map();
 
 function generateRoomCode() {
+  if (rooms.size >= 9000) return null;
+
   let code;
   do {
-    code = Math.floor(1000 + Math.random() * 9000).toString();
+    code = String(randomInt(1000, 10000));
   } while (rooms.has(code));
   return code;
 }
@@ -53,12 +56,24 @@ function shuffle(arr) {
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
-  socket.on('create-room', ({ mafiaCount }, callback) => {
+  socket.on('create-room', (payload = {}, callback) => {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      return callback?.({ success: false, error: 'Invalid room settings' });
+    }
+
+    const { mafiaCount } = payload;
+    if (!Number.isInteger(mafiaCount) || mafiaCount < 1 || mafiaCount > 5) {
+      return callback?.({ success: false, error: 'Mafia count must be between 1 and 5' });
+    }
+
     const roomCode = generateRoomCode();
+    if (!roomCode) {
+      return callback?.({ success: false, error: 'No room codes are available right now' });
+    }
     rooms.set(roomCode, {
       code: roomCode,
       hostSocketId: socket.id,
-      mafiaCount: mafiaCount || 1,
+      mafiaCount,
       doctorCount: 1,
       players: new Map(),
       started: false,
@@ -69,8 +84,13 @@ io.on('connection', (socket) => {
     if (callback) callback({ success: true, roomCode });
   });
 
-  socket.on('join-room', ({ roomCode, playerName }, callback) => {
-    if (!roomCode || roomCode.length !== 4) {
+  socket.on('join-room', (payload = {}, callback) => {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      return callback?.({ success: false, error: 'Invalid join request' });
+    }
+
+    const { roomCode, playerName } = payload;
+    if (typeof roomCode !== 'string' || !/^\\d{4}$/.test(roomCode)) {
       return callback?.({ success: false, error: 'Invalid room code' });
     }
     const room = rooms.get(roomCode);
@@ -80,15 +100,19 @@ io.on('connection', (socket) => {
     if (room.started) {
       return callback?.({ success: false, error: 'Game already started' });
     }
-    if (!playerName || playerName.trim() === '') {
+    if (typeof playerName !== 'string' || playerName.trim().length === 0) {
       return callback?.({ success: false, error: 'Player name is required' });
+    }
+    const normalizedName = playerName.trim();
+    if (normalizedName.length > 16) {
+      return callback?.({ success: false, error: 'Player name must be 16 characters or fewer' });
     }
 
     if (room.players.has(socket.id)) {
       return callback?.({ success: false, error: 'Already in room' });
     }
 
-    room.players.set(socket.id, { name: playerName, socketId: socket.id });
+    room.players.set(socket.id, { name: normalizedName, socketId: socket.id });
     socket.join(roomCode);
 
     const playersArray = Array.from(room.players.values());
@@ -97,11 +121,15 @@ io.on('connection', (socket) => {
       count: playersArray.length
     });
 
-    console.log(`Player ${playerName} joined room ${roomCode}`);
+    console.log(`Player ${normalizedName} joined room ${roomCode}`);
     if (callback) callback({ success: true, players: playersArray, roomCode });
   });
 
-  socket.on('start-game', ({ roomCode }, callback) => {
+  socket.on('start-game', (payload = {}, callback) => {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload) || typeof payload.roomCode !== 'string') {
+      return callback?.({ success: false, error: 'Invalid start-game request' });
+    }
+    const { roomCode } = payload;
     const room = rooms.get(roomCode);
     if (!room) return callback?.({ success: false, error: 'Room not found' });
     if (room.hostSocketId !== socket.id) return callback?.({ success: false, error: 'Only host can start game' });
