@@ -10,9 +10,35 @@ import PlayerLobby from './screens/PlayerLobby';
 import RoleReveal from './screens/RoleReveal';
 import { disconnectSocket } from './lib/game';
 
+const PLAYER_NAME_KEY = 'mafia-player-name';
+
+function readSavedPlayerName() {
+  try {
+    return window.localStorage.getItem(PLAYER_NAME_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+function savePlayerName(name) {
+  try {
+    window.localStorage.setItem(PLAYER_NAME_KEY, name);
+  } catch {
+    // Keep the name for the current session even when storage is unavailable.
+  }
+}
+
+function clearSavedPlayerName() {
+  try {
+    window.localStorage.removeItem(PLAYER_NAME_KEY);
+  } catch {
+    // Clearing the in-memory state is still possible when storage is unavailable.
+  }
+}
+
 export default function App() {
   const [screen, setScreen] = useState('splash');
-  const [playerName, setPlayerName] = useState(() => localStorage.getItem('mafia-player-name') || '');
+  const [playerName, setPlayerName] = useState(readSavedPlayerName);
   const [roomCode, setRoomCode] = useState(null);
   const [mafiaCount, setMafiaCount] = useState(2);
   const [players, setPlayers] = useState([]);
@@ -23,13 +49,13 @@ export default function App() {
   }, [playerName]);
 
   const handleSaveName = useCallback((name) => {
-    localStorage.setItem('mafia-player-name', name);
+    savePlayerName(name);
     setPlayerName(name);
     setScreen('home');
   }, []);
 
   const handleChangeName = useCallback(() => {
-    localStorage.removeItem('mafia-player-name');
+    clearSavedPlayerName();
     setPlayerName('');
     setScreen('name');
   }, []);
