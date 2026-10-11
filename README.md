@@ -1,38 +1,85 @@
 # MAFIA101
 
-A real-time multiplayer Mafia social-deduction game with private rooms, hidden roles, and synchronized gameplay.
+A real-time multiplayer Mafia social-deduction game with private rooms, hidden roles, and synchronized lobbies.
 
 ## Overview
 
-MAFIA101 allows players to create or join a room, enter a player name, receive a hidden role, and take part in a Mafia-style deduction game. The host configures the room and manages the session rather than playing as a standard participant.
+Players choose a name, create or join a four-digit room, and receive a secret role when the host starts the game. The current role set includes Mafia, Doctor, and Civilian.
 
-## Gameplay Features
+## Features
 
-- Create a room and share its code
-- Join an existing room
-- Configure the Mafia count
-- Assign hidden roles
-- Mafia and civilian gameplay
-- Doctor role support
-- Synchronization between connected players
+- Create and join private game rooms
+- Configure one to five Mafia roles
+- Live player-list updates through Socket.IO
+- Host-controlled game start
+- Private role assignment
+- Automatic room closure when the host disconnects
+- Input validation for room settings, room codes, and player names
+- Browser-based React interface with a Vite development server
 
-## Architecture
+## Technology
 
-The project separates the browser-based frontend from the multiplayer server.
+- React and Vite
+- Tailwind CSS
+- Node.js and Express
+- Socket.IO for real-time communication
 
-- **Frontend:** HTML, CSS, JavaScript, and the project's client-side framework
-- **Backend:** Node.js
-- **Real-time communication:** Socket.IO
-- **Frontend deployment:** Vercel
-- **Backend deployment:** Render
+## Requirements
+
+- Node.js 18 or newer
+- npm
 
 ## Local Development
 
-Use the scripts and configuration included in the repository to install dependencies and start the frontend and server. Check the environment configuration before running either component locally.
+Install dependencies:
 
-## Project Focus
+```bash
+npm install
+```
 
-MAFIA101 is a practical project involving real-time state synchronization, room management, multiplayer interfaces, and social-deduction game logic.
+Start both the multiplayer server and frontend development server:
+
+```bash
+npm run start
+```
+
+The frontend is served by Vite at `http://localhost:5173`. The Socket.IO server listens on port `3001` by default, and the Vite development server proxies Socket.IO traffic to it.
+
+To run the processes separately, use two terminals:
+
+```bash
+npm run server
+```
+
+```bash
+npm run dev
+```
+
+Build the frontend for production:
+
+```bash
+npm run build
+```
+
+## Configuration
+
+- `PORT` sets the backend listening port; the default is `3001`.
+- `FRONTEND_URL` adds your deployed frontend origin to the backend's Socket.IO CORS allowlist.
+- The development client uses the Vite proxy by default. Set `VITE_SOCKET_URL` when the local client needs to connect to a different server URL.
+
+For production, configure the frontend and backend URLs to match your deployment and keep the CORS allowlist limited to trusted origins.
+
+## Project Structure
+
+- `src/App.jsx` — application screens and navigation state
+- `src/lib/game.js` — Socket.IO client and game actions
+- `src/screens/` — name entry, room setup, lobbies, and role reveal
+- `server/server.js` — room management and role assignment
+- `vite.config.js` — frontend build configuration and development proxy
+
+## Gameplay Notes
+
+The current implementation assigns roles and synchronizes lobby state. It is a foundation for a social-deduction game; additional round phases such as day/night voting and win-condition resolution can be added as separate game systems.
 
 ## Maintainer
 
