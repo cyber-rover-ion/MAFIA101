@@ -90,7 +90,7 @@ io.on('connection', (socket) => {
     }
 
     const { roomCode, playerName } = payload;
-    if (typeof roomCode !== 'string' || !/^\\d{4}$/.test(roomCode)) {
+    if (typeof roomCode !== 'string' || !/^\d{4}$/.test(roomCode)) {
       return callback?.({ success: false, error: 'Invalid room code' });
     }
     const room = rooms.get(roomCode);
