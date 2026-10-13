@@ -53,12 +53,17 @@ function shuffle(arr) {
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
-  socket.on('create-room', ({ mafiaCount }, callback) => {
+  socket.on('create-room', (payload = {}, callback) => {
+    const requestedMafiaCount = Number(payload?.mafiaCount ?? 1);
+    if (!Number.isInteger(requestedMafiaCount) || requestedMafiaCount < 1 || requestedMafiaCount > 4) {
+      return callback?.({ success: false, error: 'Mafia count must be an integer between 1 and 4' });
+    }
+
     const roomCode = generateRoomCode();
     rooms.set(roomCode, {
       code: roomCode,
       hostSocketId: socket.id,
-      mafiaCount: mafiaCount || 1,
+      mafiaCount: requestedMafiaCount,
       doctorCount: 1,
       players: new Map(),
       started: false,
@@ -69,10 +74,17 @@ io.on('connection', (socket) => {
     if (callback) callback({ success: true, roomCode });
   });
 
-  socket.on('join-room', ({ roomCode, playerName }, callback) => {
-    if (!roomCode || roomCode.length !== 4) {
+  socket.on('join-room', (payload = {}, callback) => {
+    const roomCode = String(payload?.roomCode ?? '').trim();
+    const playerName = String(payload?.playerName ?? '').trim();
+
+    if (!/^\d{4}$/.test(roomCode)) {
       return callback?.({ success: false, error: 'Invalid room code' });
     }
+    if (!playerName || playerName.length > 24) {
+      return callback?.({ success: false, error: 'Player name must be between 1 and 24 characters' });
+    }
+
     const room = rooms.get(roomCode);
     if (!room) {
       return callback?.({ success: false, error: 'Room not found' });
@@ -80,12 +92,12 @@ io.on('connection', (socket) => {
     if (room.started) {
       return callback?.({ success: false, error: 'Game already started' });
     }
-    if (!playerName || playerName.trim() === '') {
-      return callback?.({ success: false, error: 'Player name is required' });
-    }
-
     if (room.players.has(socket.id)) {
       return callback?.({ success: false, error: 'Already in room' });
+    }
+
+    if (room.players.size >= 12) {
+      return callback?.({ success: false, error: 'Room is full (12 players maximum)' });
     }
 
     room.players.set(socket.id, { name: playerName, socketId: socket.id });
