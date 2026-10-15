@@ -37,3 +37,6 @@ MAFIA101 is a practical project involving real-time state synchronization, room 
 ## Maintainer
 
 **JebinTech**
+
+- GitHub: [@cyber-rover-ion](https://github.com/cyber-rover-ion)
+- Instagram: [@constantine.hell](https://www.instagram.com/constantine.hell/)
